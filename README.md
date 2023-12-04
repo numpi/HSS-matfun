@@ -8,11 +8,17 @@ This repository contains the code to reproduce all the numerical experiments fro
 -- Correspondence between scripts and tables in the paper --
 
 demo_Comparison_inv -> Table 1
+
 demo_Comparison_inv_banded -> Table 2
+
 demo_expm.m -> Table 3
+
 demo_expm_laplace.m -> Table 4
+
 testSampling2.m -> Table 5
+
 demo_Comparison_inv_sqrt.m -> Table 6
+
 demo_sign.m -> Table 7
 
 -- Dependencies -- The following toolboxes are needed to run (some of) the scripts:
