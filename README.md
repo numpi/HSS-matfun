@@ -18,5 +18,8 @@ demo_sign.m -> Table 7
 -- Dependencies -- The following toolboxes are needed to run (some of) the scripts:
 
 hm-toolbox https://github.com/numpi/hm-toolbox
+
 rktoolbox http://guettel.com/rktoolbox/
+
 chebfun https://www.chebfun.org/
+
