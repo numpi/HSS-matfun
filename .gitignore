@@ -1,0 +1,14 @@
+*.log
+*.aux
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*scratch
+*.pdf
+*.asv
+python
+*.html
+profile*
