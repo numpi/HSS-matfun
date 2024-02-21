@@ -47,22 +47,26 @@ for j = 1:l
     opts.treshold=256;
     opts.issymm=1;
     H = full_to_hss2(full(A),opts);
-    e=eig(A);
-    a=min(e); b=max(e);
+    b==eigs(A,1,'largestabs', 'MaxIterations', size(A,1));
+    a=eigs(A,1,'smallestabs', 'MaxIterations', size(A,1));
     eps=1e-8;
     Phi=@(x)(((2.*x-(b+a))/(b-a))-sqrt(((2.*x-(b+a))/(b-a)).^2-1));
     m=ceil(log(8*log2(n/opts.treshold)/(sqrt(a)*eps*abs(Phi(0))))*log(16*b/a)/pi^2);
     poles = poles_Markov_functions(a,b,-Inf,0,m);
     opts.deflationTol=hssoption('threshold');
 	tic
+   % profile on
 	sA = hss2_funm_symm_telescop(H,@(x)1./sqrt(real(x)),poles,opts);
+	%profsave
+    %profile off
 	times(j, 1) = toc;
     
     poles = [0 inf];
 	tic
     % profile on
 	sA2 = hss_fun_dac_band_hermitian(A, fun, poles, debug, nrmfA, 0);
-    % profile off
+	%profsave
+    %profile off
 	times(j, 2) = toc;
 	ranks(j, 2) = hssrank(sA2);
 	
@@ -96,24 +100,33 @@ function F = inv_sqrt(A)
 	F = V * diag(D) * V';
 end
 %------------------------------------------------
-function poles=poles_Markov_functions(a,b,alpha,beta,m)
+
+function poles = poles_Markov_functions(a,b,alpha,beta,m)
 %eigenvalues in [a,b] integration domain (alpha,beta)
-phi=@(x)(((2.*x-(b+a))/(b-a))-sqrt(((2.*x-(b+a))/(b-a)).^2-1));
+%[1] Beckermann Reichel
+
+phi = @(x) (((2.*x-(b+a))/(b-a))-sqrt(((2.*x-(b+a))/(b-a)).^2-1));
+psi =  @(x) (b-a)/4*(x+1./x) + (b+a)/2; % inverse of phi
 if abs(alpha)==Inf
-    k=-1/phi(beta);
+    kappa = -1/phi(beta);
 else
-    k=(phi(alpha)-phi(beta))/(1-phi(alpha)*phi(beta));
+    kappa = (phi(alpha)-phi(beta))/(1-phi(alpha)*phi(beta));
 end
-k=((1-sqrt(1-k^2))/k)^2;
-%T1=@(x)(1-phi(beta).*x)./(x-phi(beta));
-T1=@(x)(1+phi(beta)*x)/(x+phi(beta));
-T2=@(x) (sqrt(k).*x-1)./(x-sqrt(k));
-T=@(x) T1(T2(x));
-K = ellipke(k);
-poles=zeros(1,m);
-for i=1:m
-    poles(i)=sqrt(k)*ellipj(K*(m+1-2*i)/m,k);
-    poles(i)=T(poles(i));
+% k = ((1-sqrt(1-kappa^2))/kappa)^2;
+k = ( kappa / ( 1 + sqrt(1-kappa^2) ) )^2;			% version with less cancellation
+T1 = @(x)(1+phi(beta)*x)/(x+phi(beta)); % corresponds to T_1^{-1} in [1]
+T2 = @(x) (sqrt(k).*x-1)./(x-sqrt(k));    % corresponds to T_1^{-1} in [1]
+T = @(x) T1(T2(x));                       % corresponds to T^{-1} in [1]
+K = ellipke(k^2);		
+% K = ellipke(k);		
+poles = zeros(1,m);
+for i = 1:m
+    poles(i) = sqrt(k) * ellipj(K*(m+1-2*i)/m,k^2); 		
+    % poles(i) = sqrt(k) * ellipj(K*(m+1-2*i)/m, k); 		
+	% poles(i) corresponds to \hat w_i of [1]
+    poles(i) = T(poles(i));
+    poles(i) = psi(poles(i));
+
 end
 end
 

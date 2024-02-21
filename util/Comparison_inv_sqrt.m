@@ -86,24 +86,33 @@ for i=1:5:size(z,2)
 end
 end
 %-----------------------------------------------
-function poles=poles_Markov_functions(a,b,alpha,beta,m)
+function poles = poles_Markov_functions(a,b,alpha,beta,m)
 %eigenvalues in [a,b] integration domain (alpha,beta)
-phi=@(x)(((2.*x-(b+a))/(b-a))-sqrt(((2.*x-(b+a))/(b-a)).^2-1));
+%[1] Beckermann Reichel
+
+phi = @(x) (((2.*x-(b+a))/(b-a))-sqrt(((2.*x-(b+a))/(b-a)).^2-1));
+psi =  @(x) (b-a)/4*(x+1./x) + (b+a)/2; % inverse of phi
 if abs(alpha)==Inf
-    k=-1/phi(beta);
+    kappa = -1/phi(beta);
 else
-    k=(phi(alpha)-phi(beta))/(1-phi(alpha)*phi(beta));
+    kappa = (phi(alpha)-phi(beta))/(1-phi(alpha)*phi(beta));
 end
-k=((1-sqrt(1-k^2))/k)^2;
-%T1=@(x)(1-phi(beta).*x)./(x-phi(beta));
-T1=@(x)(1+phi(beta)*x)/(x+phi(beta));
-T2=@(x) (sqrt(k).*x-1)./(x-sqrt(k));
-T=@(x) T1(T2(x));
-K = ellipke(k);
-poles=zeros(1,m);
-for i=1:m
-    poles(i)=sqrt(k)*ellipj(K*(m+1-2*i)/m,k);
-    poles(i)=T(poles(i));
+% k = ((1-sqrt(1-kappa^2))/kappa)^2;
+k = ( kappa / ( 1 + sqrt(1-kappa^2) ) )^2;			% version with less cancellation
+T1 = @(x)(1+phi(beta)*x)/(x+phi(beta)); % corresponds to T_1^{-1} in [1]
+T2 = @(x) (sqrt(k).*x-1)./(x-sqrt(k));    % corresponds to T_1^{-1} in [1]
+T = @(x) T1(T2(x));                       % corresponds to T^{-1} in [1]
+K = ellipke(k^2);		
+% K = ellipke(k);		
+poles = zeros(1,m);
+for i = 1:m
+    poles(i) = sqrt(k) * ellipj(K*(m+1-2*i)/m,k^2); 		
+    % poles(i) = sqrt(k) * ellipj(K*(m+1-2*i)/m, k); 		
+	% poles(i) corresponds to \hat w_i of [1]
+    poles(i) = T(poles(i));
+    poles(i) = psi(poles(i));
+
 end
 end
+
 
